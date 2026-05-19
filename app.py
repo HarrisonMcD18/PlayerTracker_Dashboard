@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import os
 
 st.set_page_config(page_title="Eagles Academy Analytics", layout="wide")
 st.title("Newcastle Eagles — Academy Analytics")
