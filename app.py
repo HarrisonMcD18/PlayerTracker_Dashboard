@@ -147,3 +147,48 @@ fig_scatter = px.scatter(
 fig_scatter.update_traces(textposition="top center")
 fig_scatter.update_layout(plot_bgcolor="rgba(0,0,0,0)")
 st.plotly_chart(fig_scatter, use_container_width=True)
+
+# ── Zone chart ───────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("Shot zone chart")
+
+SHOT_FILE = "data/shot_data.csv"
+
+if os.path.exists(SHOT_FILE):
+    shot_df = pd.read_csv(SHOT_FILE)
+
+    zone_view = st.radio("View", ["Individual", "Full squad"], horizontal=True)
+
+    if zone_view == "Individual":
+        zone_data = shot_df[shot_df["Player"] == selected_player]
+        chart_title = f"Shot zones — {selected_player}"
+    else:
+        zone_data = shot_df.copy()
+        chart_title = "Shot zones — full squad"
+
+    if not zone_data.empty:
+        zone_summary = (
+            zone_data.groupby("Zone")
+            .agg(attempts=("Made", "count"), made=("Made", "sum"))
+            .reset_index()
+        )
+        zone_summary["FG%"] = (zone_summary["made"] / zone_summary["attempts"] * 100).round(1)
+
+        fig_zone = px.bar(
+            zone_summary,
+            x="Zone",
+            y="FG%",
+            color="FG%",
+            text="attempts",
+            color_continuous_scale=["#BA7517", "#E8C97A", "#1D9E75"],
+            range_color=[25, 65],
+            title=chart_title,
+            labels={"Zone": "", "FG%": "FG%", "attempts": "Attempts"},
+        )
+        fig_zone.update_traces(texttemplate="%{text} att", textposition="outside")
+        fig_zone.update_layout(plot_bgcolor="rgba(0,0,0,0)", xaxis_tickangle=-20)
+        st.plotly_chart(fig_zone, use_container_width=True)
+    else:
+        st.info("No shot data yet for this player — log shots using the Shot Logger page.")
+else:
+    st.info("No shot data yet — run shot_logger.py to start logging.")
